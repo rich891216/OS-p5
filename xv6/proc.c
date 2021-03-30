@@ -544,17 +544,20 @@ procdump(void)
  */
 
 int mencrypt(char *virtual_addr, int len) {
+  struct *proc = myproc();
+
   // if len equals to 0, do nothing and return
   if (len == 0) {
     return 0;
   }
   // check if len is negative or len is too large
-  if (len < 0 || virtual_addr + len > PHYSTOP) {
+  if (len < 0 || len * PGSIZE > proc->sz) {
     return -1;
   }
   
-  struct *proc = myproc();
   char *addr = PGROUNDDOWN(virtual_addr);
+  char *kaddr = 0; // kernel address
+  char *paddr = 0; // physical address
 
   // check if address is invalid
   if (uva2ka(proc->pgdir, virtual_addr) == 0) {
@@ -566,6 +569,8 @@ int mencrypt(char *virtual_addr, int len) {
     // encrypt each page
     addr += PGSIZE;
     pte_t *pte = walkpgdir(proc->pgdir, addr, 0);
+    kaddr = uva2ka(proc->pgdir, addr, 0);
+    paddr = V2P(kaddr);
     if (*pte & PTE_E == 1) {
       continue;
     } else {
