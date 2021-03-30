@@ -355,7 +355,11 @@ uva2ka(pde_t *pgdir, char *uva)
   if((*pte & PTE_P) == 0) {
     // check if encyrypted
     if (*pte & PTE_E == 0) {
-      return 0;
+      // not present and not encrypted (shouldn't happen)
+      return -2;
+    } else {
+      // encrypted
+      return -1;
     }
   }
   if((*pte & PTE_U) == 0)

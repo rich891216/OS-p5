@@ -545,37 +545,51 @@ procdump(void)
 
 int mencrypt(char *virtual_addr, int len) {
   struct *proc = myproc();
+  char *addr = PGROUNDDOWN(virtual_addr);
 
+  // case 1: calling process does not have privilege to access or modify some pages in range
+  // either all pages in range are successfully encrypted or none is encrypted
+  int encrypted_count = 0;
+  for (int i = 0; i < len; i++) {
+    char *tmpaddr = addr + len * PGSIZE;
+    if (uva2ka(proc->pgdir, tmpaddr, 0) == -1) {
+      // encrypted
+      encrypted_count++;
+    }
+  }
+  // all pages are encrypted
+  if (encrypted_count == len) {
+    return 0;
+  }
+  // case 2: check if address is invalid
+  if (uva2ka(proc->pgdir, virtual_addr) == 0) {
+    return -1;
+  }
+  // case 3: check if len is negative or len is too large
+  if (len < 0 || len * PGSIZE > proc->sz) {
+    return -1;
+  }
   // if len equals to 0, do nothing and return
   if (len == 0) {
     return 0;
   }
-  // check if len is negative or len is too large
-  if (len < 0 || len * PGSIZE > proc->sz) {
-    return -1;
-  }
-  
-  char *addr = PGROUNDDOWN(virtual_addr);
   char *kaddr = 0; // kernel address
   char *paddr = 0; // physical address
 
-  // check if address is invalid
-  if (uva2ka(proc->pgdir, virtual_addr) == 0) {
-    return -1;
-  }
+
 
   // encrypt the not already encrypted pages
   for (int i = 0; i < len; i++) {
     // encrypt each page
-    addr += PGSIZE;
-    pte_t *pte = walkpgdir(proc->pgdir, addr, 0);
-    kaddr = uva2ka(proc->pgdir, addr, 0);
-    paddr = V2P(kaddr);
-    if (*pte & PTE_E == 1) {
+    char *tempaddr = addr + len * PGSIZE;
+    pte_t *pte = walkpgdir(proc->pgdir, tempaddr, 0);
+    if (*pte & PTE_E != 0) {
       continue;
     } else {
-      *addr ^= 0xFFFFFFFF;
-    } 
+      kaddr = uva2ka(proc->pgdir, tempaddr, 0);
+      paddr = V2P(kaddr);
+      paddr ^= 0xFFFFFFFF;
+    }
   }
 
   // flush TLB after
