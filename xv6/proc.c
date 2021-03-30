@@ -544,13 +544,13 @@ procdump(void)
  */
 
 int mencrypt(char *virtual_addr, int len) {
-  // check if len is negative or len is too large
-  if (len < 0 || virtual_addr + len > PHYSTOP) {
-    return -1;
-  }
   // if len equals to 0, do nothing and return
   if (len == 0) {
     return 0;
+  }
+  // check if len is negative or len is too large
+  if (len < 0 || virtual_addr + len > PHYSTOP) {
+    return -1;
   }
   
   struct *proc = myproc();
@@ -560,10 +560,19 @@ int mencrypt(char *virtual_addr, int len) {
   if (uva2ka(proc->pgdir, virtual_addr) == 0) {
     return -1;
   }
+
   // encrypt the not already encrypted pages
-  for (int i = 1; i <= len; i++) {
+  for (int i = 0; i < len; i++) {
     // encrypt each page
-    
+    addr += PGSIZE;
+    pte_t *pte = walkpgdir(proc->pgdir, addr, 0);
+    if (*pte & PTE_E == 1) {
+      continue;
+    } else {
+      *addr ^= 0xFFFFFFFF;
+    } 
   }
+
+  // flush TLB after
   return 0;
 }
