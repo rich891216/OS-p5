@@ -532,3 +532,38 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+
+
+
+/**
+ * add new system calls:
+ * int mencrypt(char *virtual_addr, int len)
+ * int getpgtable(struct pt_entry* entries, int num)
+ * int dump_rawphymem(uint physical_addr, char * buffer)
+ */
+
+int mencrypt(char *virtual_addr, int len) {
+  // check if len is negative or len is too large
+  if (len < 0 || virtual_addr + len > PHYSTOP) {
+    return -1;
+  }
+  // if len equals to 0, do nothing and return
+  if (len == 0) {
+    return 0;
+  }
+  
+  struct *proc = myproc();
+  char *addr = PGROUNDDOWN(virtual_addr);
+
+  // check if address is invalid
+  if (uva2ka(proc->pgdir, virtual_addr) == 0) {
+    return -1;
+  }
+  // encrypt the not already encrypted pages
+  for (int i = 1; i <= len; i++) {
+    // encrypt each page
+    
+  }
+  return 0;
+}

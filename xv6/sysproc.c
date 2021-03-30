@@ -89,3 +89,15 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// encrypt memory
+int
+sys_mencrypt(void)
+{
+  char *virtual_addr;
+  int len;
+  if (argptr(0, virtual_addr, sizeof(virtual_addr)) < 0 || argint(1, &len) < 0) {
+    return -1;
+  }
+  return mencrypt(virtual_addr, len);
+}
