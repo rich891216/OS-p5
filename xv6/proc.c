@@ -544,15 +544,15 @@ procdump(void)
  */
 
 int mencrypt(char *virtual_addr, int len) {
-  struct *proc = myproc();
-  char *addr = PGROUNDDOWN(virtual_addr);
+  struct proc *curproc = myproc();
+  char *addr = (char*)PGROUNDDOWN((uint)virtual_addr);
 
   // case 1: calling process does not have privilege to access or modify some pages in range
   // either all pages in range are successfully encrypted or none is encrypted
   int encrypted_count = 0;
   for (int i = 0; i < len; i++) {
     char *tmpaddr = addr + len * PGSIZE;
-    if (uva2ka(proc->pgdir, tmpaddr, 0) == -1) {
+    if (uva2ka(curproc->pgdir, tmpaddr) == 0) {
       // encrypted
       encrypted_count++;
     }
@@ -562,11 +562,11 @@ int mencrypt(char *virtual_addr, int len) {
     return 0;
   }
   // case 2: check if address is invalid
-  if (uva2ka(proc->pgdir, virtual_addr) == 0) {
+  if (uva2ka(curproc->pgdir, virtual_addr) == 0) {
     return -1;
   }
   // case 3: check if len is negative or len is too large
-  if (len < 0 || len * PGSIZE > proc->sz) {
+  if (len < 0 || len * PGSIZE > curproc->sz) {
     return -1;
   }
   // if len equals to 0, do nothing and return
@@ -574,7 +574,7 @@ int mencrypt(char *virtual_addr, int len) {
     return 0;
   }
   char *kaddr = 0; // kernel address
-  char *paddr = 0; // physical address
+  uint paddr = 0; // physical address
 
 
 
@@ -582,18 +582,17 @@ int mencrypt(char *virtual_addr, int len) {
   for (int i = 0; i < len; i++) {
     // encrypt each page
     char *tempaddr = addr + len * PGSIZE;
-    pte_t *pte = walkpgdir(proc->pgdir, tempaddr, 0);
-    if (*pte & PTE_E != 0) {
+    if (uva2ka(curproc->pgdir, tempaddr) == 0) {
       continue;
     } else {
-      kaddr = uva2ka(proc->pgdir, tempaddr, 0);
+      kaddr = uva2ka(curproc->pgdir, tempaddr);
       paddr = V2P(kaddr);
       paddr ^= 0xFFFFFFFF;
     }
   }
 
   // flush TLB after
-  switchuvm(proc); // flush TLB?
+  switchuvm(curproc); // flush TLB?
   return 0;
 }
 
@@ -604,6 +603,7 @@ getpgtable(struct pt_entry* entries, int num)
   // print
 
   // check what to return
+  struct proc *curproc = myproc();
   int retnum = 0;
   int shouldcount = 0;
   int counter = 0;
