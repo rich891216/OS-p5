@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "ptentry.h"
 
 int
 sys_fork(void)
@@ -100,4 +101,21 @@ sys_mencrypt(void)
     return -1;
   }
   return mencrypt(virtual_addr, len);
+}
+
+// get statistics of memory
+int
+sys_getpgtable(void)
+{
+  // implement
+  int num;
+  struct proc *curproc = myproc();
+
+  if (argint(1, &num) < 0) {
+    // something is invalid
+    return -1;
+  }
+
+  struct pt_entry entries[curproc->sz / PGSIZE];
+  return getpgtable(entries, num);
 }

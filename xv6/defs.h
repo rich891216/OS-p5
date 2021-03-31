@@ -9,6 +9,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct pt_entry;
 
 // bio.c
 void            binit(void);
@@ -120,6 +121,8 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int             mencrypt(char*, int);
+int             getpgtable(struct pt_entry*, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

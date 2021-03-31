@@ -593,5 +593,39 @@ int mencrypt(char *virtual_addr, int len) {
   }
 
   // flush TLB after
+  switchuvm(proc); // flush TLB?
   return 0;
+}
+
+int
+getpgtable(struct pt_entry* entries, int num)
+{
+  // implementation: fill up entries as <entries> is passed in as empty array
+  // print
+
+  // check what to return
+  int retnum = 0;
+  int shouldcount = 0;
+  int counter = 0;
+  if (curproc->sz / PGSIZE > num) {
+    retnum = num;
+  }
+  if (curproc->sz / PGSIZE <= num) {
+    shouldcount = 1;
+  }
+  // error checking (entries is null? num is 0 or less?)
+  if (entries == 0) {
+    return -1;
+  }
+  if (num <= 0) {
+    return -1;
+  }
+
+  // print with for loop
+
+  // check what to return
+  if (shouldcount) {
+    retnum = counter;
+  }
+  return retnum;
 }
