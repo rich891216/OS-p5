@@ -629,3 +629,9 @@ getpgtable(struct pt_entry* entries, int num)
   }
   return retnum;
 }
+
+int
+dump_rawphymem(uint physical_addr, char * buffer)
+{
+  return 0;
+}

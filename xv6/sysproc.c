@@ -119,3 +119,10 @@ sys_getpgtable(void)
   struct pt_entry entries[curproc->sz / PGSIZE];
   return getpgtable(entries, num);
 }
+
+// allows the user to dump the raw content of one physical page where physical_addr resides
+int
+sys_dump_rawphymem(void) {
+  // TODO: implement
+  return 0;
+}

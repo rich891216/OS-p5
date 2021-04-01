@@ -22,3 +22,4 @@
 #define SYS_close  21
 #define SYS_mencrypt    22
 #define SYS_getpgtable  23
+#define SYS_dump_rawphymem  24
