@@ -352,10 +352,27 @@ uva2ka(pde_t *pgdir, char *uva)
   pte_t *pte;
 
   pte = walkpgdir(pgdir, uva, 0);
+
+  // both P and E bits are 0
   if((*pte & PTE_P) == 0) {
-	  return 0;
+    if ((*pte & PTE_E) == 0) {
+      return 0;
+    }
   }
-  
+
+  // both P and E bits are 1
+  if((*pte & PTE_P) != 0) {
+    if ((*pte & PTE_E) != 0) {
+      return 0;
+    }
+  }
+
+  // P is 0 and E is 1 -- encrypted
+  if((*pte & PTE_P) == 0) {
+    if ((*pte & PTE_E) != 0) {
+      return (char*)1;
+    }
+  }
   if((*pte & PTE_U) == 0)
     return 0;
   return (char*)P2V(PTE_ADDR(*pte));

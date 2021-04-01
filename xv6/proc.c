@@ -546,7 +546,7 @@ procdump(void)
 int mencrypt(char *virtual_addr, int len) {
   struct proc *curproc = myproc();
   char *addr = (char*)PGROUNDDOWN((uint)virtual_addr);
-
+  char *test;
   // case 1: calling process does not have privilege to access or modify some pages in range
   // either all pages in range are successfully encrypted or none is encrypted
   for (int i = 0; i < len; i++) {
@@ -576,9 +576,8 @@ int mencrypt(char *virtual_addr, int len) {
   for (int i = 0; i < len; i++) {
     // encrypt each page
     char *tempaddr = addr + len * PGSIZE;
-    pte_t *pte;
-    pte = walkpgdir(curproc->pgdir, tempaddr, 0);
-    if ((*pte & PTE_E) != 0) {
+    test = uva2ka(curproc->pgdir, tempaddr);
+    if ((uint)test == 1) {
       continue;
     } else {
       kaddr = uva2ka(curproc->pgdir, tempaddr);
