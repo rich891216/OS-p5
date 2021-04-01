@@ -353,25 +353,8 @@ uva2ka(pde_t *pgdir, char *uva)
 
   pte = walkpgdir(pgdir, uva, 0);
 
-  // both P and E bits are 0
   if((*pte & PTE_P) == 0) {
-    if ((*pte & PTE_E) == 0) {
-      return 0;
-    }
-  }
-
-  // both P and E bits are 1
-  if((*pte & PTE_P) != 0) {
-    if ((*pte & PTE_E) != 0) {
-      return 0;
-    }
-  }
-
-  // P is 0 and E is 1 -- encrypted
-  if((*pte & PTE_P) == 0) {
-    if ((*pte & PTE_E) != 0) {
-      return (char*)1;
-    }
+    return 0;
   }
   if((*pte & PTE_U) == 0)
     return 0;
@@ -411,3 +394,49 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+int mencrypt(char *virtual_addr, int len) {
+  struct proc *curproc = myproc();
+  char *addr = (char*)PGROUNDDOWN((uint)virtual_addr);
+  // case 1: calling process does not have privilege to access or modify some pages in range
+  // either all pages in range are successfully encrypted or none is encrypted
+  for (int i = 0; i < len; i++) {
+    char *tempaddr = addr + len * PGSIZE;
+    if (uva2ka(curproc->pgdir, tempaddr) == 0) {
+      return -1;
+    }
+  }
+  // case 2: check if address is invalid
+  if (uva2ka(curproc->pgdir, virtual_addr) == 0) {
+    return -1;
+  }
+  // case 3: check if len is negative or len is too large
+  if (len < 0 || len * PGSIZE > curproc->sz) {
+    return -1;
+  }
+  // if len equals to 0, do nothing and return
+  if (len == 0) {
+    return 0;
+  }
+  char *kaddr = 0; // kernel address
+  uint paddr = 0; // physical address
+
+  // encrypt the not already encrypted pages
+  for (int i = 0; i < len; i++) {
+    // encrypt each page
+    char *tempaddr = addr + len * PGSIZE;
+    pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
+    if ((uint)test == 1) {
+      continue;
+    } else {
+      kaddr = uva2ka(curproc->pgdir, tempaddr);
+      paddr = V2P(kaddr);
+      paddr ^= 0xFFFFF000;
+      paddr ^= PTE_E;
+      paddr ^= ~PTE_P;
+    }
+  }
+
+  // flush TLB after
+  switchuvm(curproc); // flush TLB?
+  return 0;
+}
