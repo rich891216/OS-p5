@@ -549,18 +549,7 @@ int mencrypt(char *virtual_addr, int len) {
 
   // case 1: calling process does not have privilege to access or modify some pages in range
   // either all pages in range are successfully encrypted or none is encrypted
-  int encrypted_count = 0;
-  for (int i = 0; i < len; i++) {
-    char *tmpaddr = addr + len * PGSIZE;
-    if (uva2ka(curproc->pgdir, tmpaddr) == 0) {
-      // encrypted
-      encrypted_count++;
-    }
-  }
-  // all pages are encrypted?
-  if (encrypted_count == len) {
-    return 0;
-  }
+  
   // case 2: check if address is invalid
   if (uva2ka(curproc->pgdir, virtual_addr) == 0) {
     return -1;
@@ -582,7 +571,8 @@ int mencrypt(char *virtual_addr, int len) {
   for (int i = 0; i < len; i++) {
     // encrypt each page
     char *tempaddr = addr + len * PGSIZE;
-    if (uva2ka(curproc->pgdir, tempaddr) == 0) {
+    pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
+    if ((*pte & PTE_E != 0)) {
       continue;
     } else {
       kaddr = uva2ka(curproc->pgdir, tempaddr);
@@ -631,7 +621,13 @@ getpgtable(struct pt_entry* entries, int num)
 }
 
 int
-dump_rawphymem(uint physical_addr, char * buffer)
+dump_rawphymem(uint physical_addr, char *buffer)
 {
+  struct proc *curproc = myproc();
+
+  if(copyout(curproc->pgdir,,buffer, PGSIZE) == -1) {
+    return -1;
+  }
+
   return 0;
 }
