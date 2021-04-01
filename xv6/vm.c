@@ -353,12 +353,9 @@ uva2ka(pde_t *pgdir, char *uva)
 
   pte = walkpgdir(pgdir, uva, 0);
   if((*pte & PTE_P) == 0) {
-    // check if encyrypted
-    if ((*pte * PTE_E) == 0){
-      // encrypted
-      return 0;
-    }
+	  return 0;
   }
+  
   if((*pte & PTE_U) == 0)
     return 0;
   return (char*)P2V(PTE_ADDR(*pte));
