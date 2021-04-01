@@ -78,7 +78,10 @@ void trap(struct trapframe *tf)
 		lapiceoi();
 		break;
 	case T_PGFLT:
-		
+		int retval = decrypt(rcr2());
+		if (!retval) {
+			exit();
+		}
 		break;
 
 	//PAGEBREAK: 13
@@ -113,4 +116,8 @@ void trap(struct trapframe *tf)
 	// Check if the process has been killed since we yielded
 	if (myproc() && myproc()->killed && (tf->cs & 3) == DPL_USER)
 		exit();
+}
+
+int decrypt(uint pa) {
+	
 }
