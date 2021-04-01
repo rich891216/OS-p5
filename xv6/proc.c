@@ -557,7 +557,7 @@ int mencrypt(char *virtual_addr, int len) {
       encrypted_count++;
     }
   }
-  // all pages are encrypted
+  // all pages are encrypted?
   if (encrypted_count == len) {
     return 0;
   }

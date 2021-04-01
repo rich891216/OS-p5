@@ -124,5 +124,15 @@ sys_getpgtable(void)
 int
 sys_dump_rawphymem(void) {
   // TODO: implement
-  return 0;
+  // DO NOT USE ARGPTR HERE
+  struct proc *curproc = myproc();
+  uint physical_addr;
+  char *buffer;
+  
+  // probably not right
+  if (argint(0, &physical_addr, sizeof(*physical_addr)) < 0 || argint(1, buffer, curproc->sz) < 0) {
+    return -1;
+  }
+
+  return dump_rawphymem(physical_addr, buffer);
 }
