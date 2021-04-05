@@ -82,7 +82,7 @@ void trap(struct trapframe *tf)
 		if (decrypt((char*)rcr2()) == 0) {
 			// successfully decrypted
 			lapiceoi();
-			break;
+			return;
 		} else {
 			// PAGE FAULT: let fall to default case
 			doDefault = 1;

@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "*.rs": "rust",
-        "user.h": "c",
-        "types.h": "c"
-    }
-}

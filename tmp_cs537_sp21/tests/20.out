@@ -1,4 +1,0 @@
-$ syscalls 6 1
-exec: fail
-exec syscalls failed
-$ syscalls 100 100

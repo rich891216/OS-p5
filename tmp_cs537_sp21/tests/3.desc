@@ -1,1 +1,0 @@
-[mencrypt, (getpgtable)] Call mencrypt with len equals to 1 and verify the page table entry status bits

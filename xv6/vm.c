@@ -367,7 +367,7 @@ uva2ka(pde_t *pgdir, char *uva)
 
 	pte = walkpgdir(pgdir, uva, 0);
 
-	if (((*pte & PTE_P) == 0) & ((*pte & PTE_E) == 0))
+	if (((*pte & PTE_P) == 0) && ((*pte & PTE_E) == 0))
 	{
       return 0;
 	}
@@ -467,7 +467,6 @@ int mencrypt(char *virtual_addr, int len)
 		char *tempaddr = (char *) addr + i * PGSIZE;
 		if (uva2ka(curproc->pgdir, tempaddr) == 0)
 		{
-      cprintf("invalid addr\n");
 			return -1;
 		}
 	}
@@ -518,16 +517,31 @@ int getpgtable(struct pt_entry *entries, int num)
 	// implementation: fill up entries as <entries> is passed in as empty array
 	// print
 
+	struct proc *curproc = myproc();
+
 	if (entries == 0) {
 		return -1;
 	}
 
-	for(int i = myproc()->sz; i >= myproc()->sz - num; i--) {
+	char *top = (char *)(KERNBASE - 1);
+
+
+	for(int i = 0; i < num; i++) {
+		char *addr = (char *) PGROUNDDOWN((uint)top - i * PGSIZE);
+		if (uva2ka(curproc->pgdir, addr) == 0) {
+			return i;
+		}
+		pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
+		entries[i].pdx = PDX(addr);
+		entries[i].ptx = PTX(addr);
+		entries[i].ppage = *pte >> 12;
+		entries[i].present = (*pte & PTE_P);
+		entries[i].writable = (*pte & PTE_W) >> 1;
+		entries[i].encrypted = (*pte& PTE_E) >> 9;
 		cprintf("%d: pdx: %x ptx: %x ppage: %x present: %d writable: %d encrypted: %d\n", i, entries[i].pdx,
 				entries[i].ptx, entries[i].ppage, entries[i].present, entries[i].writable, entries[i].encrypted);
 	}
-	return 0;
-
+	return num;
 	// check what to return
 	// struct proc *curproc = myproc();
 	// int retnum = 0;
