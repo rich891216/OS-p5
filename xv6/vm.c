@@ -552,11 +552,11 @@ int getpgtable(struct pt_entry *entries, int num)
 
 int dump_rawphymem(uint physical_addr, char *buffer)
 {
-	// struct proc *curproc = myproc();
+	struct proc *curproc = myproc();
 
-	// if(copyout(curproc->pgdir,,buffer, PGSIZE) == -1) {
-	//   return -1;
-	// }
+	if(copyout(curproc->pgdir,physical_addr, buffer, PGSIZE) == -1) {
+	  return -1;
+	}
 
 	return 0;
 }
