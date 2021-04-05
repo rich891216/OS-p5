@@ -1,0 +1,2 @@
+XV6_TEST_OUTPUT Index 0: pdx: 0x0, ptx: 0x0, present bit: 0, writable bit: 0, encrypted: 0
+XV6_TEST_OUTPUT physical memory is dumped incorrectly

@@ -366,12 +366,9 @@ uva2ka(pde_t *pgdir, char *uva)
 
 	pte = walkpgdir(pgdir, uva, 0);
 
-	if ((*pte & PTE_P) == 0)
+	if (((*pte & PTE_P) == 0) & ((*pte & PTE_E) == 0))
 	{
-    if ((*pte & PTE_E) == 0)
-    {
       return 0;
-    }
 	}
 	if ((*pte & PTE_U) == 0)
 		return 0;
@@ -416,7 +413,6 @@ int decrypt(char *uva)
 	struct proc *curproc = myproc();
 	char *addr = (char *)PGROUNDDOWN((uint)uva);
 	char *kaddr = 0;
-	uint paddr = 0;
 	pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
 	if ((*pte & PTE_E) == 0)
 	{
@@ -426,11 +422,15 @@ int decrypt(char *uva)
 	else
 	{
 		kaddr = uva2ka(curproc->pgdir, addr);
-		paddr = V2P(kaddr);
-		paddr ^= 0xFFFFF000;
-		paddr ^= PTE_E;
-		paddr ^= ~PTE_P;
-		return 0;
+		for (int i = 0; i < PGSIZE; ++i)
+    		*(kaddr + i) ^= 0xFF;
+		*pte = (*pte) | PTE_P;
+		*pte = (*pte) & (~PTE_E);
+
+		if ((*pte) & PTE_P) {
+			return 0;
+		}
+		return 1;
 	}
 	// for (int i = 0; i < curproc->sz; i++) {
 	// 	char *tempaddr = addr + curproc->sz * PGSIZE;
@@ -486,7 +486,6 @@ int mencrypt(char *virtual_addr, int len)
 		return 0;
 	}
 	char *kaddr = 0; // kernel address
-	uint paddr = 0;	 // physical address
 
 	// encrypt the not already encrypted pages
 	for (int i = 0; i < len; i++)
@@ -500,11 +499,11 @@ int mencrypt(char *virtual_addr, int len)
 		}
 		else
 		{
-			kaddr = uva2ka(curproc->pgdir, tempaddr);
-			paddr = V2P(kaddr);
-			paddr ^= 0xFFFFF000;
-			paddr ^= PTE_E;
-			paddr ^= ~PTE_P;
+			kaddr = uva2ka(curproc->pgdir, addr);
+			for (int i = 0; i < PGSIZE; ++i)
+    			*(kaddr + i) ^= 0xFF;
+			*pte = (*pte) & (~PTE_P);
+			*pte = (*pte) | PTE_E;
 		}
 	}
 

@@ -1,0 +1,11 @@
+XV6_TEST_OUTPUT Index 0: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 1: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 2: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 3: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 4: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Deallocate the encrypted page and allocate them again.
+XV6_TEST_OUTPUT Index 0: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 1: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 2: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 3: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 4: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
