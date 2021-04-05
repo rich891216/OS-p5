@@ -421,8 +421,8 @@ int decrypt(char *uva)
 	}
 	else
 	{
-		kaddr = uva2ka(curproc->pgdir, tempaddr);
-      	paddr = V2P(kaddr);
+		char *kaddr = uva2ka(curproc->pgdir, addr);
+      	uint paddr = V2P(kaddr);
       	paddr ^= 0xFFFFFFFF;
 		*pte = (*pte) | PTE_P;
 		*pte = (*pte) & (~PTE_E);
@@ -496,8 +496,8 @@ int mencrypt(char *virtual_addr, int len)
 		}
 		else
 		{
-			kaddr = uva2ka(curproc->pgdir, tempaddr);
-      		paddr = V2P(kaddr);
+			char *kaddr = uva2ka(curproc->pgdir, tempaddr);
+      		uint paddr = V2P(kaddr);
       		paddr ^= 0xFFFFFFFF;
 			*pte = (*pte) | PTE_E;
 			*pte = (*pte) & (~PTE_P);
