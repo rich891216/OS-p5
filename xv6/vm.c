@@ -399,23 +399,38 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
-int decrypt(uint va) {
+int decrypt(char *uva) {
 	struct proc *curproc = myproc();
-	char *addr = (char *)PGROUNDDOWN(va);
-	for (int i = 0; i < curproc->sz; i++) {
-		char *tempaddr = addr + curproc->sz * PGSIZE;
-		pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
-    	if ((*pte & PTE_E) == 0) {
-    	  return 0;
-    	} else {
-    	  kaddr = uva2ka(curproc->pgdir, tempaddr);
-    	  paddr = V2P(kaddr);
-    	  paddr ^= 0xFFFFF000;
-    	  paddr ^= PTE_E;
-    	  paddr ^= ~PTE_P;
-	      return 1;
-		}
-	}
+	char *addr = (char *)PGROUNDDOWN((uint)uva);
+  char *kaddr = 0;
+  uint paddr = 0;
+  pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
+  if ((*pte & PTE_E) == 0) {
+    // not encrypted, page fault
+
+  }
+  else {
+    kaddr = uva2ka(curproc->pgdir, addr);
+    paddr = V2P(kaddr);
+    paddr ^= 0xFFFFF000;
+    paddr ^= PTE_E;
+    paddr ^= ~PTE_P;
+    return 0;
+  }
+	// for (int i = 0; i < curproc->sz; i++) {
+	// 	char *tempaddr = addr + curproc->sz * PGSIZE;
+	// 	pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
+  //   	if ((*pte & PTE_E) == 0) {
+  //   	  return 0;
+  //   	} else {
+  //   	  kaddr = uva2ka(curproc->pgdir, tempaddr);
+  //   	  paddr = V2P(kaddr);
+  //   	  paddr ^= 0xFFFFF000;
+  //   	  paddr ^= PTE_E;
+  //   	  paddr ^= ~PTE_P;
+	//       return 1;
+	// 	}
+	// }
 }
 
 /**

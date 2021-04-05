@@ -78,11 +78,13 @@ void trap(struct trapframe *tf)
 		lapiceoi();
 		break;
 	case T_PGFLT:
-		int retval = decrypt(rcr2());
-		if (!retval) {
-			exit();
+		if (decrypt(rcr2()) == 0) {
+			// successfully decrypted
+			lapiceoi();
+			break;
+		} else {
+			// PAGE FAULT: let fall to default case
 		}
-		break;
 
 	//PAGEBREAK: 13
 	default:
