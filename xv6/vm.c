@@ -399,6 +399,32 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+int decrypt(uint va) {
+	struct proc *curproc = myproc();
+	char *addr = (char *)PGROUNDDOWN(va);
+	for (int i = 0; i < curproc->sz; i++) {
+		char *tempaddr = addr + curproc->sz * PGSIZE;
+		pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
+    	if ((*pte & PTE_E) == 0) {
+    	  return 0;
+    	} else {
+    	  kaddr = uva2ka(curproc->pgdir, tempaddr);
+    	  paddr = V2P(kaddr);
+    	  paddr ^= 0xFFFFF000;
+    	  paddr ^= PTE_E;
+    	  paddr ^= ~PTE_P;
+	      return 1;
+		}
+	}
+}
+
+/**
+ * add new system calls:
+ * int mencrypt(char *virtual_addr, int len)
+ * int getpgtable(struct pt_entry* entries, int num)
+ * int dump_rawphymem(uint physical_addr, char * buffer)
+ */
+
 int mencrypt(char *virtual_addr, int len) {
   struct proc *curproc = myproc();
   char *addr = (char*)PGROUNDDOWN((uint)virtual_addr);
@@ -443,5 +469,51 @@ int mencrypt(char *virtual_addr, int len) {
 
   // flush TLB after
   switchuvm(curproc); // flush TLB?
+  return 0;
+}
+
+int
+getpgtable(struct pt_entry* entries, int num)
+{
+  // implementation: fill up entries as <entries> is passed in as empty array
+  // print
+
+  // check what to return
+  struct proc *curproc = myproc();
+  int retnum = 0;
+  int shouldcount = 0;
+  int counter = 0;
+  if (curproc->sz / PGSIZE > num) {
+    retnum = num;
+  }
+  if (curproc->sz / PGSIZE <= num) {
+    shouldcount = 1;
+  }
+  // error checking (entries is null? num is 0 or less?)
+  if (entries == 0) {
+    return -1;
+  }
+  if (num <= 0) {
+    return -1;
+  }
+
+  // print with for loop
+
+  // check what to return
+  if (shouldcount) {
+    retnum = counter;
+  }
+  return retnum;
+}
+
+int
+dump_rawphymem(uint physical_addr, char *buffer)
+{
+  // struct proc *curproc = myproc();
+
+  // if(copyout(curproc->pgdir,,buffer, PGSIZE) == -1) {
+  //   return -1;
+  // }
+
   return 0;
 }

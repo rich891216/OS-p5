@@ -117,7 +117,3 @@ void trap(struct trapframe *tf)
 	if (myproc() && myproc()->killed && (tf->cs & 3) == DPL_USER)
 		exit();
 }
-
-int decrypt(uint pa) {
-	
-}
