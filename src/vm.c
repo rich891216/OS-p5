@@ -373,6 +373,10 @@ uva2ka(pde_t *pgdir, char *uva)
 	}
 	if ((*pte & PTE_U) == 0)
 		return 0;
+	if (((*pte & PTE_P) != 0) && ((*pte & PTE_E) != 0))
+	{
+      return 0;
+	}
 	return (char *)P2V(PTE_ADDR(*pte));
 }
 
@@ -523,15 +527,16 @@ int getpgtable(struct pt_entry *entries, int num)
 		return -1;
 	}
 
-	char *top = (char *)(KERNBASE - 1);
+	char *top;
+	top = (char *)(KERNBASE - 1);
 
 
 	for(int i = 0; i < num; i++) {
-		char *tempaddr = (char *) PGROUNDDOWN((uint)top - i * PGSIZE);
-		if (uva2ka(curproc->pgdir, tempaddr) == 0) {
-			return -1;
+		char *addr;
+		addr = (char *) PGROUNDDOWN((uint)top - i * PGSIZE);
+		if (uva2ka(curproc->pgdir, addr) == 0) {
+			return i;
 		}
-		char *addr = (char *)PGROUNDDOWN((uint)tempaddr);
 		pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
 		entries[i].pdx = PDX(addr);
 		entries[i].ptx = PTX(addr);
