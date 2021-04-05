@@ -528,14 +528,14 @@ int getpgtable(struct pt_entry *entries, int num)
 	}
 
 	char *top;
-	top = (char *)(KERNBASE - 1);
+	top = (char *) ((curproc->sz / PGSIZE) << 12);
 
 
 	for(int i = 0; i < num; i++) {
 		char *addr;
-		addr = (char *) PGROUNDDOWN((uint)top - i * PGSIZE);
+		addr = (char *) (top - i * PGSIZE);
 		if (uva2ka(curproc->pgdir, addr) == 0) {
-			return i;
+			return (uint) addr;
 		}
 		pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
 		entries[i].pdx = PDX(addr);
