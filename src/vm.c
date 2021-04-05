@@ -367,13 +367,9 @@ uva2ka(pde_t *pgdir, char *uva)
 
 	pte = walkpgdir(pgdir, uva, 0);
 
-	if (((*pte & PTE_P) == 0) && ((*pte & PTE_E) == 0))
-	{
-      return 0;
-	}
 	if ((*pte & PTE_U) == 0)
 		return 0;
-	if (((*pte & PTE_P) != 0) && ((*pte & PTE_E) != 0))
+	if ((((*pte & PTE_P) == 0) && ((*pte & PTE_E) == 0)) || (((*pte & PTE_P) != 0) && ((*pte & PTE_E) != 0)))
 	{
       return 0;
 	}
@@ -417,7 +413,6 @@ int decrypt(char *uva)
 {
 	struct proc *curproc = myproc();
 	char *addr = (char *)PGROUNDDOWN((uint)uva);
-	char *kaddr = 0;
 	pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
 	if ((*pte & PTE_E) == 0)
 	{
@@ -426,16 +421,16 @@ int decrypt(char *uva)
 	}
 	else
 	{
-		kaddr = uva2ka(curproc->pgdir, addr);
-		for (int i = 0; i < PGSIZE; ++i)
-    		*(kaddr + i) ^= 0xFF;
+		kaddr = uva2ka(curproc->pgdir, tempaddr);
+      	paddr = V2P(kaddr);
+      	paddr ^= 0xFFFFFFFF;
 		*pte = (*pte) | PTE_P;
 		*pte = (*pte) & (~PTE_E);
 
 		if ((*pte) & PTE_P) {
 			return 0;
 		}
-		return 1;
+		return -1;
 	}
 	// for (int i = 0; i < curproc->sz; i++) {
 	// 	char *tempaddr = addr + curproc->sz * PGSIZE;
@@ -466,6 +461,8 @@ int mencrypt(char *virtual_addr, int len)
 	char *addr = (char *)PGROUNDDOWN((uint)virtual_addr);
 	// case 1: calling process does not have privilege to access or modify some pages in range
 	// either all pages in range are successfully encrypted or none is encrypted
+	//
+	// case 2: check if address is invalid
 	for (int i = 0; i < len; i++)
 	{
 		char *tempaddr = (char *) addr + i * PGSIZE;
@@ -474,28 +471,24 @@ int mencrypt(char *virtual_addr, int len)
 			return -1;
 		}
 	}
-	// case 2: check if address is invalid
-	if (uva2ka(curproc->pgdir, virtual_addr) == 0)
-	{
-		return -1;
-	}
+	
 	// case 3: check if len is negative or len is too large
 	if (len < 0 || len * PGSIZE > curproc->sz)
 	{
 		return -1;
 	}
+
 	// if len equals to 0, do nothing and return
 	if (len == 0)
 	{
 		return 0;
 	}
-	char *kaddr = 0; // kernel address
 
 	// encrypt the not already encrypted pages
 	for (int i = 0; i < len; i++)
 	{
 		// encrypt each page
-		char *tempaddr = (char *) addr + len * PGSIZE;
+		char *tempaddr = (char *) addr + i * PGSIZE;
 		pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
 		if ((*pte & PTE_E) != 0)
 		{
@@ -503,11 +496,11 @@ int mencrypt(char *virtual_addr, int len)
 		}
 		else
 		{
-			kaddr = uva2ka(curproc->pgdir, addr);
-			for (int i = 0; i < PGSIZE; ++i)
-    			*(kaddr + i) ^= 0xFF;
-			*pte = (*pte) & (~PTE_P);
+			kaddr = uva2ka(curproc->pgdir, tempaddr);
+      		paddr = V2P(kaddr);
+      		paddr ^= 0xFFFFFFFF;
 			*pte = (*pte) | PTE_E;
+			*pte = (*pte) & (~PTE_P);
 		}
 	}
 
@@ -548,6 +541,7 @@ int getpgtable(struct pt_entry *entries, int num)
 				entries[i].ptx, entries[i].ppage, entries[i].present, entries[i].writable, entries[i].encrypted);
 	}
 	return num;
+
 	// check what to return
 	// struct proc *curproc = myproc();
 	// int retnum = 0;
@@ -585,7 +579,9 @@ int dump_rawphymem(uint physical_addr, char *buffer)
 {
 	struct proc *curproc = myproc();
 
-	if(copyout(curproc->pgdir,physical_addr, buffer, PGSIZE) == -1) {
+	char *kaddr = P2V(argint(0, (int *) &physical_addr));
+
+	if(copyout(curproc->pgdir,(int) kaddr, buffer, PGSIZE) == -1) {
 	  return -1;
 	}
 
