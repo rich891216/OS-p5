@@ -84,6 +84,7 @@ void trap(struct trapframe *tf)
 			break;
 		} else {
 			// PAGE FAULT: let fall to default case
+			goto default;
 		}
 
 	//PAGEBREAK: 13
