@@ -1,1 +1,1 @@
-XV6_TEST_OUTPUT: getpgtable returned incorrect value: expected 1, got 32768
+XV6_TEST_OUTPUT: getpgtable returned incorrect value: expected 1, got 0

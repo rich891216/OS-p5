@@ -423,7 +423,7 @@ int decrypt(char *uva)
 	{
 		char *kaddr = uva2ka(curproc->pgdir, addr);
       	uint paddr = V2P(kaddr);
-      	paddr ^= 0xFFFFFFFF;
+      	paddr ^= 0xFFFFF000;
 		*pte = (*pte) | PTE_P;
 		*pte = (*pte) & (~PTE_E);
 
@@ -498,7 +498,7 @@ int mencrypt(char *virtual_addr, int len)
 		{
 			char *kaddr = uva2ka(curproc->pgdir, tempaddr);
       		uint paddr = V2P(kaddr);
-      		paddr ^= 0xFFFFFFFF;
+      		paddr ^= 0xFFFFF000;
 			*pte = (*pte) | PTE_E;
 			*pte = (*pte) & (~PTE_P);
 		}
@@ -521,14 +521,14 @@ int getpgtable(struct pt_entry *entries, int num)
 	}
 
 	char *top;
-	top = (char *) ((curproc->sz / PGSIZE) << 12);
+	top = (char *) (curproc->sz - 1);
 
 
 	for(int i = 0; i < num; i++) {
 		char *addr;
-		addr = (char *) (top - i * PGSIZE);
+		addr = (char *) ((uint)top - i * PGSIZE);
 		if (uva2ka(curproc->pgdir, addr) == 0) {
-			return (uint) addr;
+			return i;
 		}
 		pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
 		entries[i].pdx = PDX(addr);
