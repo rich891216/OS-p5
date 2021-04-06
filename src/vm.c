@@ -422,17 +422,23 @@ int decrypt(char *uva)
 	char *addr = (char *)PGROUNDDOWN((uint)uva);
 	char *kaddr = uva2ka(curproc->pgdir, addr);
 	pte_t *pte = walkpgdir(curproc->pgdir, kaddr, 0);
-	if (*pte & PTE_E)
+	if (kaddr == 0) {
+		return -1;
+	}
+	if (pte == 0) {
+		return -1;
+	}
+	if ((*pte & PTE_E) != 0)
 	{
       	uint paddr = V2P(kaddr);
 	 	paddr ^= 0xFFFFF000;
 		*pte = (*pte) | PTE_P;
 		*pte = (*pte) & (~PTE_E);
 
-		if (*pte & PTE_P) {
-			return 0;
-		}
-		return -1;
+		// if (*pte & PTE_P) {
+		// 	return 0;
+		// }
+		return 0;
 	}
 	else
 	{
@@ -583,7 +589,7 @@ int dump_rawphymem(uint physical_addr, char *buffer)
 	char *kaddr = P2V(physical_addr);
 
 	for (int i = 0; i < PGSIZE; i++) {
-		if (copyout(curproc->pgdir,(int) (uint) buffer[i], kaddr, PGSIZE) == -1) {
+		if (copyout(curproc->pgdir,(uint) buffer[i], kaddr, PGSIZE) == -1) {
 			return -1;
 		}
 	}

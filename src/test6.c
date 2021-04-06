@@ -42,11 +42,12 @@ main(void){
                 pt_entries[i].encrypted
             );
 
-			printf("I am here");
+			printf(1, "I am here\n");
 
 			if (dump_rawphymem((uint)(pt_entries[i].ppage * PGSIZE), buffer) != 0)
                 err("dump_rawphymem return non-zero value\n");
             
+            printf(1, "after if statement\n");
             uint expected = ~0xAA;
             uint is_failed = 0;
             for (int j = 0; j < PGSIZE; j ++) {
