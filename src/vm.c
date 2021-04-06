@@ -522,7 +522,7 @@ int getpgtable(struct pt_entry *entries, int num)
 		return -1;
 	}
 
-	char *addr = (char*)PGROUNDDOWN(curproc->sz);
+	char *addr = (char*)curproc->sz - 1;
 
 
 	for(int i = 0; i < num; i++) {
