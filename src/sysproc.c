@@ -115,7 +115,7 @@ sys_getpgtable(void)
   int num;
   struct pt_entry *entries;
 
-  if (argint(1, &num) < 0 || argptr(0, (void *)&entries, sizeof(*entries)) < 0) {
+  if (argint(1, &num) < 0 || argptr(0, (void *)&entries, sizeof(entries)) < 0) {
     // something is invalid
     return -1;
   }

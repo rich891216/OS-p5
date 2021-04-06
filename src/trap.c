@@ -81,7 +81,7 @@ void trap(struct trapframe *tf)
 		if (decrypt((char*)rcr2()) == 0) {
 			// successfully decrypted
 			lapiceoi();
-			return;
+			break;
 		}
 
 	//PAGEBREAK: 13
