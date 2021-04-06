@@ -1,2 +1,2 @@
-XV6_TEST_OUTPUT Index 0: pdx: 0x0, ptx: 0x0, present: 0, writable: 0, encrypted: 0
+XV6_TEST_OUTPUT Index 0: pdx: 0x0, ptx: 0x11, present: 0, writable: 0, encrypted: 0
 XV6_TEST_OUTPUT dump_rawphymem return non-zero value
