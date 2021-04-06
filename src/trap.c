@@ -33,7 +33,6 @@ void idtinit(void)
 //PAGEBREAK: 41
 void trap(struct trapframe *tf)
 {
-	int doDefault = 0;
 	if (tf->trapno == T_SYSCALL)
 	{
 		if (myproc()->killed)
@@ -83,28 +82,10 @@ void trap(struct trapframe *tf)
 			// successfully decrypted
 			lapiceoi();
 			return;
-		} else {
-			// PAGE FAULT: let fall to default case
-			doDefault = 1;
 		}
 
 	//PAGEBREAK: 13
 	default:
-		if (myproc() == 0 || (tf->cs & 3) == 0)
-		{
-			// In kernel, it must be our mistake.
-			cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
-					tf->trapno, cpuid(), tf->eip, rcr2());
-			panic("trap");
-		}
-		// In user space, assume process misbehaved.
-		cprintf("pid %d %s: trap %d err %d on cpu %d "
-				"eip 0x%x addr 0x%x--kill proc\n",
-				myproc()->pid, myproc()->name, tf->trapno,
-				tf->err, cpuid(), tf->eip, rcr2());
-		myproc()->killed = 1;
-	}
-	if (doDefault) {
 		if (myproc() == 0 || (tf->cs & 3) == 0)
 		{
 			// In kernel, it must be our mistake.

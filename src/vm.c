@@ -474,7 +474,7 @@ int mencrypt(char *virtual_addr, int len)
 	}
 	
 	// case 3: check if len is negative or len is too large
-	if (len < 0 || len * PGSIZE > curproc->sz)
+	if (len < 0 || (uint)(addr) + len * PGSIZE > curproc->sz)
 	{
 		return -1;
 	}
@@ -523,7 +523,7 @@ int getpgtable(struct pt_entry *entries, int num)
 	}
 
 	char *top;
-	top = (char *) (curproc->sz - 1);
+	top = (char *) PGROUNDDOWN(curproc->sz - 1);
 
 
 	for(int i = 0; i < num; i++) {
@@ -538,7 +538,7 @@ int getpgtable(struct pt_entry *entries, int num)
 		entries[i].ppage = *pte >> 12;
 		entries[i].present = (*pte & PTE_P);
 		entries[i].writable = (*pte & PTE_W) >> 1;
-		entries[i].encrypted = (*pte& PTE_E) >> 9;
+		entries[i].encrypted = (*pte & PTE_E) >> 9;
 		cprintf("%d: pdx: %x ptx: %x ppage: %x present: %d writable: %d encrypted: %d\n", i, entries[i].pdx,
 				entries[i].ptx, entries[i].ppage, entries[i].present, entries[i].writable, entries[i].encrypted);
 	}
