@@ -522,14 +522,11 @@ int getpgtable(struct pt_entry *entries, int num)
 		return -1;
 	}
 
-	char *top;
-	top = (char *) PGROUNDDOWN(curproc->sz - 1);
+	char *addr = ((char*)(curproc->sz)) - 1;
 
 
 	for(int i = 0; i < num; i++) {
-		char *addr;
-		addr = (char *) ((uint)top - i * PGSIZE);
-		if (uva2ka(curproc->pgdir, addr) == 0) {
+		if (i * PGSIZE > curproc->sz) {
 			return i;
 		}
 		pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
@@ -541,6 +538,7 @@ int getpgtable(struct pt_entry *entries, int num)
 		entries[i].encrypted = (*pte & PTE_E) >> 9;
 		cprintf("%d: pdx: %x ptx: %x ppage: %x present: %d writable: %d encrypted: %d\n", i, entries[i].pdx,
 				entries[i].ptx, entries[i].ppage, entries[i].present, entries[i].writable, entries[i].encrypted);
+		addr -= PGSIZE;
 	}
 	return num;
 

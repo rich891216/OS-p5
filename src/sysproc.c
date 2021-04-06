@@ -109,14 +109,13 @@ sys_getpgtable(void)
 {
   // implement
   int num;
-  struct proc *curproc = myproc();
 
   if (argint(1, &num) < 0) {
     // something is invalid
     return -1;
   }
 
-  struct pt_entry entries[curproc->sz / PGSIZE];
+  struct pt_entry entries[num];
   return getpgtable(entries, num);
 }
 
