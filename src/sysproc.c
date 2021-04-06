@@ -124,14 +124,12 @@ int
 sys_dump_rawphymem(void) {
   // TODO: implement
   // DO NOT USE ARGPTR HERE
-  int temp_addr;
-  uint physical_addr;
+  int physical_addr;
   char *buffer;
   
   // probably not right
-  if (argint(0, &temp_addr) < 0 || argptr(1, &buffer, PGSIZE) < 0) {
+  if (argint(0, &physical_addr) < 0 || argptr(1, &buffer, PGSIZE) < 0) {
     return -1;
   }
-  physical_addr = (uint)temp_addr;
-  return dump_rawphymem(physical_addr, buffer);
+  return dump_rawphymem((uint)physical_addr, buffer);
 }

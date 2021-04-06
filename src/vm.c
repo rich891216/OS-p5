@@ -458,6 +458,12 @@ int decrypt(char *uva)
 
 int mencrypt(char *virtual_addr, int len)
 {
+	// if len equals to 0, do nothing and return
+	if (len == 0)
+	{
+		return 0;
+	}
+
 	struct proc *curproc = myproc();
 	char *addr = (char *)PGROUNDDOWN((uint)virtual_addr);
 	// case 1: calling process does not have privilege to access or modify some pages in range
@@ -477,12 +483,6 @@ int mencrypt(char *virtual_addr, int len)
 	if (len < 0 || len > curproc->sz)
 	{
 		return -1;
-	}
-
-	// if len equals to 0, do nothing and return
-	if (len == 0)
-	{
-		return 0;
 	}
 
 	// encrypt the not already encrypted pages
@@ -579,11 +579,12 @@ int dump_rawphymem(uint physical_addr, char *buffer)
 {
 	struct proc *curproc = myproc();
 
-	char *kaddr = P2V(argint(0, (int *) &physical_addr));
+	char *kaddr = P2V(physical_addr);
 
-	if(copyout(curproc->pgdir,(int) kaddr, buffer, PGSIZE) == -1) {
-	  return -1;
+	for (int i = 0; i < PGSIZE; i++) {
+		if (copyout(curproc->pgdir,(int) (uint) buffer[i], kaddr, PGSIZE) == -1) {
+			return -1;
+		}
 	}
-
 	return 0;
 }
