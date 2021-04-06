@@ -414,23 +414,21 @@ int decrypt(char *uva)
 	struct proc *curproc = myproc();
 	char *addr = (char *)PGROUNDDOWN((uint)uva);
 	pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
-	if ((*pte & PTE_E) == 0)
-	{
-		// not encrypted, page fault
-		return -1;
-	}
-	else
+	if (*pte & PTE_E)
 	{
 		char *kaddr = uva2ka(curproc->pgdir, addr);
-      	for (int i = 0; i < PGSIZE; i++) {
-    		*(kaddr + i) ^= 0xFF;
-		}
+      	uint paddr = V2P(kaddr);
+	 	paddr ^= 0xFFFFF000;
 		*pte = (*pte) | PTE_P;
 		*pte = (*pte) & (~PTE_E);
 
 		if ((*pte) & PTE_P) {
 			return 0;
 		}
+		return -1;
+	}
+	else
+	{
 		return -1;
 	}
 	// for (int i = 0; i < curproc->sz; i++) {
@@ -458,12 +456,6 @@ int decrypt(char *uva)
 
 int mencrypt(char *virtual_addr, int len)
 {
-	// if len equals to 0, do nothing and return
-	if (len == 0)
-	{
-		return 0;
-	}
-
 	struct proc *curproc = myproc();
 	char *addr = (char *)PGROUNDDOWN((uint)virtual_addr);
 	// case 1: calling process does not have privilege to access or modify some pages in range
@@ -491,16 +483,15 @@ int mencrypt(char *virtual_addr, int len)
 		// encrypt each page
 		char *tempaddr = (char *) uva;
 		pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
-		if ((*pte & PTE_E) != 0)
+		if (*pte & PTE_E)
 		{
 			continue;
 		}
 		else
 		{
 			char *kaddr = uva2ka(curproc->pgdir, addr);
-      		for (int i = 0; i < PGSIZE; i++) {
-    			*(kaddr + i) ^= 0xFF;
-			}
+      		uint paddr = V2P(kaddr);
+	 		paddr ^= 0xFFFFF000;
 			*pte = (*pte) | PTE_E;
 			*pte = (*pte) & (~PTE_P);
 		}
