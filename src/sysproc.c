@@ -131,7 +131,6 @@ sys_dump_rawphymem(void) {
   int physical_addr;
   char *buffer;
   
-  // probably not right
   if (argint(0, &physical_addr) < 0 || argptr(1, &buffer, PGSIZE) < 0) {
     return -1;
   }
