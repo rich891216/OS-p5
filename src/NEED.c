@@ -76,7 +76,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 			panic("remap");
 		if (perm & PTE_E)
 		{
-			*pte = pa | perm | PTE_E;
+			*pte = pa;
 		}
 		else
 		{
@@ -459,15 +459,13 @@ int decrypt(char *uva)
 int mencrypt(char *virtual_addr, int len)
 {
 	struct proc *curproc = myproc();
-	char *addr = (char *)PGROUNDDOWN((uint)virtual_addr);
 	// case 1: calling process does not have privilege to access or modify some pages in range
 	// either all pages in range are successfully encrypted or none is encrypted
 	//
 	// case 2: check if address is invalid
-	for (int uva = (uint)addr; uva < (uint)addr+len*PGSIZE; uva++)
+	for (int uva = PGROUNDDOWN((uint)virtual_addr); uva < PGROUNDDOWN((uint)virtual_addr) + len * PGSIZE; uva++)
 	{
-		char *tempaddr = (char *) uva;
-		if (uva2ka(curproc->pgdir, tempaddr) == 0)
+		if (uva2ka(curproc->pgdir, (char *) uva) == 0)
 		{
 			return -1;
 		}
@@ -486,18 +484,17 @@ int mencrypt(char *virtual_addr, int len)
 	}
 
 	// encrypt the not already encrypted pages
-	for (int uva = (uint)addr; uva < (uint)addr+len*PGSIZE; uva++)
+	for (int uva = PGROUNDDOWN((uint)virtual_addr); uva < PGROUNDDOWN((uint)virtual_addr) + len * PGSIZE; uva++)
 	{
 		// encrypt each page
-		char *tempaddr = (char *) uva;
-		pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
+		pte_t *pte = walkpgdir(curproc->pgdir, (char *) uva, 0);
 		if ((*pte & PTE_E) != 0)
 		{
 			continue;
 		}
 		else
 		{
-			char *kaddr = uva2ka(curproc->pgdir, addr);
+			char *kaddr = uva2ka(curproc->pgdir, (char *) uva);
       		for (int i = 0; i < PGSIZE; i++) {
     			*(kaddr + i) ^= 0xFF;
 			}
@@ -516,31 +513,35 @@ int getpgtable(struct pt_entry *entries, int num)
 	// implementation: fill up entries as <entries> is passed in as empty array
 	// print
 
-	struct proc *curproc = myproc();
+	// struct proc *curproc = myproc();
 
-	if (entries == 0) {
-		return -1;
-	}
+	// if (entries == 0) {
+	// 	return -1;
+	// }
 
-	char *addr = (char*)PGROUNDDOWN(curproc->sz);
+	// char *top;
+	// top = (char *) PGROUNDDOWN(curproc->sz - 1);
 
 
-	for(int i = 0; i < num; i++) {
-		if (i * PGSIZE > curproc->sz) {
-			return i;
-		}
-		pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
-		entries[i].pdx = PDX(addr);
-		entries[i].ptx = PTX(addr);
-		entries[i].ppage = *pte >> 12;
-		entries[i].present = (*pte & PTE_P);
-		entries[i].writable = (*pte & PTE_W) >> 1;
-		entries[i].encrypted = (*pte & PTE_E) >> 9;
-		cprintf("%d: pdx: %x ptx: %x ppage: %x present: %d writable: %d encrypted: %d\n", i, entries[i].pdx,
-				entries[i].ptx, entries[i].ppage, entries[i].present, entries[i].writable, entries[i].encrypted);
-		addr -= PGSIZE;
-	}
-	return num;
+	// for(int i = 0; i < num; i++) {
+	// 	char *addr;
+	// 	addr = (char *) ((uint)top - i * PGSIZE);
+	// 	if (uva2ka(curproc->pgdir, addr) == 0) {
+	// 		return i;
+	// 	}
+	// 	pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
+	// 	entries[i].pdx = PDX(*pte) >> PDXSHIFT;
+	// 	entries[i].ptx = PTX(*pte) >> PTXSHIFT;
+	// 	entries[i].ppage = *pte >> PTXSHIFT;
+	// 	entries[i].present = (*pte & PTE_P);
+	// 	entries[i].writable = (*pte & PTE_W) >> 1;
+	// 	entries[i].encrypted = (*pte & PTE_E) >> 9;
+	// 	cprintf("%d: pdx: %x ptx: %x ppage: %x present: %d writable: %d encrypted: %d\n", i, entries[i].pdx,
+	// 			entries[i].ptx, entries[i].ppage, entries[i].present, entries[i].writable, entries[i].encrypted);
+	// }
+	// return num;
+
+	return 0;
 
 	// check what to return
 	// struct proc *curproc = myproc();
