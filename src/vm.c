@@ -420,44 +420,25 @@ int decrypt(char *uva)
 {
 	struct proc *curproc = myproc();
 	char *addr = (char *)PGROUNDDOWN((uint)uva);
-	char *kaddr = uva2ka(curproc->pgdir, addr);
-	pte_t *pte = walkpgdir(curproc->pgdir, kaddr, 0);
-	if (kaddr == 0) {
-		return -1;
-	}
-	if (pte == 0) {
-		return -1;
-	}
-	if ((*pte & PTE_E) != 0)
+	pte_t *pte = walkpgdir(curproc->pgdir, addr, 0);
+	if (*pte & PTE_E)
 	{
-      	uint paddr = V2P(kaddr);
-	 	paddr ^= 0xFFFFF000;
+		char *kaddr = uva2ka(curproc->pgdir, addr);
+      	for (int i = 0; i < PGSIZE; ++i) {
+    		*(kaddr + i) ^= 0xFF;
+		}
 		*pte = (*pte) | PTE_P;
 		*pte = (*pte) & (~PTE_E);
 
-		// if (*pte & PTE_P) {
-		// 	return 0;
-		// }
-		return 0;
+		if (*pte & PTE_P) {
+			return 0;
+		}
+		return -1;
 	}
 	else
 	{
 		return -1;
 	}
-	// for (int i = 0; i < curproc->sz; i++) {
-	// 	char *tempaddr = addr + curproc->sz * PGSIZE;
-	// 	pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
-	//   	if ((*pte & PTE_E) == 0) {
-	//   	  return 0;
-	//   	} else {
-	//   	  kaddr = uva2ka(curproc->pgdir, tempaddr);
-	//   	  paddr = V2P(kaddr);
-	//   	  paddr ^= 0xFFFFF000;
-	//   	  paddr ^= PTE_E;
-	//   	  paddr ^= ~PTE_P;
-	//       return 1;
-	// 	}
-	// }
 }
 
 /**
@@ -471,30 +452,31 @@ int mencrypt(char *virtual_addr, int len)
 {
 	struct proc *curproc = myproc();
 	char *addr = (char *)PGROUNDDOWN((uint)virtual_addr);
+
+	// case 3: check if len is negative or len is too large
+	if (len < 0 || len * PGSIZE > curproc->sz)
+	{
+		return -1;
+	}
+
 	// case 1: calling process does not have privilege to access or modify some pages in range
 	// either all pages in range are successfully encrypted or none is encrypted
 	//
 	// case 2: check if address is invalid
-	for (int uva = (uint)addr; uva < (uint)addr+len*PGSIZE; uva++)
+	for (int i = 0; i < len; i++)
 	{
-		char *tempaddr = (char *) uva;
+		char *tempaddr = (char *) addr + i * PGSIZE;
 		if (uva2ka(curproc->pgdir, tempaddr) == 0)
 		{
 			return -1;
 		}
 	}
-	
-	// case 3: check if len is negative or len is too large
-	if (len < 0 || len > curproc->sz)
-	{
-		return -1;
-	}
 
 	// encrypt the not already encrypted pages
-	for (int uva = (uint)addr; uva < (uint)addr+len*PGSIZE; uva++)
+	for (int i = 0; i < len; i++)
 	{
 		// encrypt each page
-		char *tempaddr = (char *) uva;
+		char *tempaddr = (char *) addr + i * PGSIZE;
 		pte_t *pte = walkpgdir(curproc->pgdir, tempaddr, 0);
 		if (*pte & PTE_E)
 		{
@@ -503,8 +485,9 @@ int mencrypt(char *virtual_addr, int len)
 		else
 		{
 			char *kaddr = uva2ka(curproc->pgdir, tempaddr);
-      		uint paddr = V2P(kaddr);
-	 		paddr ^= 0xFFFFF000;
+      		for (int i = 0; i < PGSIZE; ++i) {
+    			*(kaddr + i) ^= 0xFF;
+			}
 			*pte = (*pte) | PTE_E;
 			*pte = (*pte) & (~PTE_P);
 		}
@@ -548,38 +531,6 @@ int getpgtable(struct pt_entry *entries, int num)
 				entries[i].ptx, entries[i].ppage, entries[i].present, entries[i].writable, entries[i].encrypted);
 	}
 	return num;
-
-	// check what to return
-	// struct proc *curproc = myproc();
-	// int retnum = 0;
-	// int shouldcount = 0;
-	// int counter = 0;
-	// if (curproc->sz / PGSIZE > num)
-	// {
-	// 	retnum = num;
-	// }
-	// if (curproc->sz / PGSIZE <= num)
-	// {
-	// 	shouldcount = 1;
-	// }
-	// // error checking (entries is null? num is 0 or less?)
-	// if (entries == 0)
-	// {
-	// 	return -1;
-	// }
-	// if (num <= 0)
-	// {
-	// 	return -1;
-	// }
-
-	// // print with for loop
-
-	// // check what to return
-	// if (shouldcount)
-	// {
-	// 	retnum = counter;
-	// }
-	// return retnum;
 }
 
 int dump_rawphymem(uint physical_addr, char *buffer)
@@ -588,10 +539,5 @@ int dump_rawphymem(uint physical_addr, char *buffer)
 
 	char *kaddr = P2V(physical_addr);
 
-	for (int i = 0; i < PGSIZE; i++) {
-		if (copyout(curproc->pgdir,(uint) buffer[i], kaddr, PGSIZE) == -1) {
-			return -1;
-		}
-	}
-	return 0;
+	return copyout(curproc->pgdir, (uint)buffer, kaddr, PGSIZE);
 }
